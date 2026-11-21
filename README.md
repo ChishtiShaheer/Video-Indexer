@@ -74,7 +74,7 @@ python run.py --input finevideo/data --output results_baseline.jsonl --limit 20 
 - `--model <path>`: Model weights path (default: `yolo11l.engine` if present, else `yolo11l.pt`).
 - `--fps <int>`: Sampling rate $k$ frames per second (default: `5`).
 - `--batch-size <int>`: Cross-video batch size for GPU inference (default: `64`).
-- `--workers <int>`: Number of background CPU decoding worker processes (default: `min(cpu - 2, 28)`).
+- `--workers <int>`: Number of background CPU decoding worker processes (default: `min(cpu - 2, 8)`).
 - `--device <str>`: Compute device (e.g., `cuda:0`, `cuda:1`, `cpu`).
 - `--limit <int>`: Process at most $N$ videos.
 - `--imgsz <int>`: Inference resolution (default: `640`).

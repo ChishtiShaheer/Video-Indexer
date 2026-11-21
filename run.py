@@ -201,7 +201,7 @@ def main():
     # Decoder workers: leave a couple of threads for the main process / GPU feeder.
     if args.workers is None:
         cpu_cnt = os.cpu_count() or 4
-        workers = max(1, min(cpu_cnt - 2, 28))
+        workers = max(1, min(cpu_cnt - 2, 8))
     else:
         workers = args.workers
 

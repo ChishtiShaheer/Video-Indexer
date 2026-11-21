@@ -15,22 +15,25 @@ from .source import find_parquet_files, iter_videos
 
 def _decode_worker(task_queue, result_queue, k, chunk_size, imgsz):
     """Worker process: reads mp4 bytes from task_queue, decodes, letterboxes, puts chunks in result_queue."""
-    while True:
-        try:
-            item = task_queue.get()
-        except (EOFError, KeyboardInterrupt):
-            break
-        if item is None:
-            break
-        vid, data, err = item
-        if err is not None:
-            result_queue.put((vid, None, [], True, None, err))
-            continue
-        try:
-            for chunk in process_video_frames(vid, data, k=k, chunk_size=chunk_size, imgsz=imgsz):
-                result_queue.put(chunk)
-        except Exception as e:
-            result_queue.put((vid, None, [], True, None, short_error(e)))
+    try:
+        while True:
+            try:
+                item = task_queue.get()
+            except (EOFError, KeyboardInterrupt):
+                break
+            if item is None:
+                break
+            vid, data, err = item
+            if err is not None:
+                result_queue.put((vid, None, [], True, None, err))
+                continue
+            try:
+                for chunk in process_video_frames(vid, data, k=k, chunk_size=chunk_size, imgsz=imgsz):
+                    result_queue.put(chunk)
+            except Exception as e:
+                result_queue.put((vid, None, [], True, None, short_error(e)))
+    finally:
+        result_queue.put((None, None, [], True, None, None))
 
 
 def load_completed_videos(output_path):
@@ -140,6 +143,9 @@ def run_pipeline(
                 continue
 
             vid, batch, seconds_meta, is_last, max_sec, err = item
+            if vid is None:
+                active_workers -= 1
+                continue
             if vid not in video_state:
                 video_state[vid] = {"secs": collections.defaultdict(list), "max_sec": -1}
 
