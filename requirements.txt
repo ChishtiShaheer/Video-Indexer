@@ -1,10 +1,17 @@
 # Core dependencies for Video Indexing Pipeline
-ultralytics==8.3.40
-torch==2.4.1
-torchvision==0.19.1
-av==13.1.0
-opencv-python-headless==4.10.0.84
-pyarrow==17.0.0
-huggingface_hub==0.26.2
-numpy==1.26.4
-tqdm==4.67.1
+#
+# NOTE: torch and torchvision are intentionally excluded here.
+#   - On Kaggle:        pre-installed with CUDA support — reinstalling breaks GPU linkage.
+#   - On a local GPU:   install manually with your CUDA version, e.g.:
+#                       pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+#   - On CPU only:      pip install torch torchvision
+#
+# All other packages below work on any machine via plain pip.
+
+ultralytics>=8.3.40
+av>=13.1.0
+opencv-python-headless>=4.10.0.84
+pyarrow>=17.0.0
+huggingface_hub>=0.26.2
+numpy>=1.26.4
+tqdm>=4.67.1
