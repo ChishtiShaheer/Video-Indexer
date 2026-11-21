@@ -69,6 +69,11 @@ class Detector:
         if batch_images is None or len(batch_images) == 0:
             return []
 
+        # Ultralytics predict() on this version requires a list of (H, W, 3)
+        # images, not a stacked 4-D numpy array (B, H, W, 3).
+        if hasattr(batch_images, "ndim") and batch_images.ndim == 4:
+            batch_images = [batch_images[i] for i in range(len(batch_images))]
+
         results = self.model.predict(
             batch_images,
             conf=self.conf,
