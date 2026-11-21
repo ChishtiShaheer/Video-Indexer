@@ -3,6 +3,35 @@ from .common import (COCO_CLASS_IDS, CONF_THRESHOLD, IMGSZ, IOU_THRESHOLD,
                      TARGET_CLASSES)
 
 
+def _predict_kwargs(half: bool) -> dict:
+    """Return the correct FP16 keyword for the installed Ultralytics version.
+
+    Ultralytics renamed the ``half`` predict argument to ``quantize`` in v8.1+.
+    Passing the wrong keyword raises a TypeError on newer builds.  We detect
+    which name the installed version accepts at import time so the same code
+    runs on every evaluator machine without warnings or errors.
+    """
+    import inspect
+    try:
+        from ultralytics.models.yolo.detect.predict import DetectionPredictor
+        sig = inspect.signature(DetectionPredictor.__call__)
+        # Newer builds expose 'quantize' in the call signature directly;
+        # older builds only have 'half'.  Fall back to 'half' when unsure.
+        if "quantize" in sig.parameters:
+            return {"quantize": 16 if half else 32}
+    except Exception:
+        pass
+    # Also check the cfg/args schema used by predict()
+    try:
+        from ultralytics.cfg import get_cfg
+        defaults = get_cfg()
+        if hasattr(defaults, "quantize") and not hasattr(defaults, "half"):
+            return {"quantize": 16 if half else 32}
+    except Exception:
+        pass
+    return {"half": half}
+
+
 class Detector:
     def __init__(
         self,
@@ -43,8 +72,10 @@ class Detector:
         self.is_engine = str(weights).endswith(".engine")
         self.model = YOLO(weights)
 
-        # TensorRT engines are built in FP16; PyTorch .pt uses half=True on CUDA
-        self.half = half and (self.device != "cpu")
+        # TensorRT engines are built in FP16; PyTorch .pt uses half=True on CUDA.
+        # Store the resolved FP16 kwargs once so every predict() call uses them.
+        _want_half = half and (self.device != "cpu")
+        self._fp16_kwargs = _predict_kwargs(_want_half)
 
         # Warm up model to eliminate first-batch compilation latency
         dummy = self.np.zeros((self.imgsz, self.imgsz, 3), dtype=self.np.uint8)
@@ -55,7 +86,7 @@ class Detector:
             imgsz=self.imgsz,
             classes=self.classes,
             device=self.device,
-            half=self.half,
+            **self._fp16_kwargs,
             verbose=False,
         )
 
@@ -69,8 +100,8 @@ class Detector:
         if batch_images is None or len(batch_images) == 0:
             return []
 
-        # Ultralytics predict() on this version requires a list of (H, W, 3)
-        # images, not a stacked 4-D numpy array (B, H, W, 3).
+        # Ultralytics predict() requires a list of (H, W, 3) images, not a
+        # stacked 4-D numpy array (B, H, W, 3).
         if hasattr(batch_images, "ndim") and batch_images.ndim == 4:
             batch_images = [batch_images[i] for i in range(len(batch_images))]
 
@@ -81,7 +112,7 @@ class Detector:
             imgsz=self.imgsz,
             classes=self.classes,
             device=self.device,
-            half=self.half,
+            **self._fp16_kwargs,
             verbose=False,
         )
 
