@@ -4,64 +4,109 @@ A high-throughput video indexing pipeline designed to process 125+ hours of vide
 
 ---
 
-## 1. Environment Setup
+## 1. How to Run
 
-### System Packages (Ubuntu 22.04)
-Run the following command to install required media and runtime libraries:
+### Option A — Kaggle (Recommended, fastest)
+
+> **This is how the submission was produced.** Use the included `image-indexer.ipynb` notebook.
+
+1. Go to [kaggle.com/code](https://www.kaggle.com/code) → **New Notebook** → **File → Import Notebook** → upload `image-indexer.ipynb`.
+2. **Settings → Accelerator**: Set to **GPU T4 x 2** (or P100).
+3. **Settings → Internet**: Toggle **ON**.
+4. Add the [data-video](https://www.kaggle.com/datasets/shaheerahmedchishti/data-video) dataset as input.
+5. Run all cells top-to-bottom. Cell 2 installs all Python dependencies automatically.
+
+---
+
+### Option B — Local Machine (Linux / WSL2 with NVIDIA GPU)
+
+#### Step 1 — Clone the repo
 ```bash
-sudo apt-get update && sudo apt-get install -y --no-install-recommends \
-    ffmpeg \
-    libgl1 \
-    libglib2.0-0 \
-    build-essential
+git clone https://github.com/ChishtiShaheer/Video-Indexer.git
+cd Video-Indexer
 ```
 
-### Python Environment
-Create and activate a Python 3.11 virtual environment, then install pinned dependencies:
+#### Step 2 — System libraries
+```bash
+sudo apt-get update && sudo apt-get install -y --no-install-recommends \
+    ffmpeg libgl1 libglib2.0-0 build-essential
+```
+
+#### Step 3 — Python environment
 ```bash
 python3.11 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
+```
+
+#### Step 4 — Install PyTorch (GPU)
+```bash
+# CUDA 12.1 (RTX 3xxx / 4xxx / A100):
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+
+# CUDA 11.8:
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+
+# CPU-only (no GPU):
+pip install torch torchvision
+```
+
+#### Step 5 — Install remaining dependencies
+```bash
 pip install -r requirements.txt
 ```
 
----
-
-## 2. Preparation Command (Run Once With Internet)
-
-Per evaluation guidelines, run the preparation command once before the timed run:
+#### Step 6 — Download the FineVideo dataset (50 Parquet files, ~56 GB)
 ```bash
-# Standard preparation: downloads yolo11l.pt and warms up CUDA
+pip install huggingface_hub
+huggingface-cli login          # paste your HF read token
+mkdir -p finevideo/data
+huggingface-cli download HuggingFaceFV/finevideo \
+  --repo-type dataset \
+  --include "data/train-000[0-4]*.parquet" \
+  --local-dir finevideo
+```
+
+> Accept dataset terms first at [huggingface.co/datasets/HuggingFaceFV/finevideo](https://huggingface.co/datasets/HuggingFaceFV/finevideo)
+
+#### Step 7 — Prepare (download weights, warm up)
+```bash
 python run.py --prepare
 ```
 
-### Optional: TensorRT FP16 Engine Build
-To build a high-performance TensorRT FP16 engine on the target machine:
+#### Step 8 — Run the pipeline
 ```bash
-python run.py --prepare --export-trt --batch-size 64
+# Single GPU
+python run.py --input finevideo/data --output results.jsonl --fps 5 --batch-size 64
+
+# Two GPUs (faster)
+python run.py --input finevideo/data --output results.jsonl --shard-index 0 --num-shards 2 --device cuda:0 --workers 0 &
+python run.py --input finevideo/data --output results.jsonl --shard-index 1 --num-shards 2 --device cuda:1 --workers 0 &
+wait
+cat results.shard0of2.jsonl results.shard1of2.jsonl > results.jsonl
+gzip -k -9 results.jsonl
 ```
-*Note: The engine is tied to the specific GPU architecture and TensorRT version. When `yolo11l.engine` exists, `run.py` automatically selects it; otherwise it gracefully falls back to `yolo11l.pt`.*
 
 ---
 
-## 3. Running the Pipeline (Offline Timed Run)
+## 2. Running the Pipeline
 
-### Single GPU (Standard Run)
+> See **Option B Step 8** above for the full local run commands.
+
+### Single GPU
 ```bash
-python run.py --input <folder of .parquet files> --output results.jsonl
+python run.py --input <folder of .parquet files> --output results.jsonl --fps 5 --batch-size 64
 ```
 
-### Two GPUs (Dual T4 on Kaggle / Multi-GPU Instances)
-Split the files across two disjoint shards and run one process per GPU, dividing CPU decoder workers evenly to prevent CPU oversubscription:
+### Two GPUs
 ```bash
-python run.py --input finevideo/data --output results.jsonl --shard-index 0 --num-shards 2 --device cuda:0 --workers 6 &
-python run.py --input finevideo/data --output results.jsonl --shard-index 1 --num-shards 2 --device cuda:1 --workers 6 &
+python run.py --input finevideo/data --output results.jsonl --shard-index 0 --num-shards 2 --device cuda:0 --workers 0 &
+python run.py --input finevideo/data --output results.jsonl --shard-index 1 --num-shards 2 --device cuda:1 --workers 0 &
 wait
 cat results.shard0of2.jsonl results.shard1of2.jsonl > results.jsonl
 ```
 
 ### Quick Baseline Verification (First 20 Videos)
-Before launching the full multi-hour run, verify end-to-end functionality on 20 videos:
 ```bash
 python run.py --input finevideo/data --output results_baseline.jsonl --limit 20 --fps 5
 ```
