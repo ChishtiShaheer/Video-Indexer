@@ -1,0 +1,7 @@
+# AI Chat History Links
+
+Per Section 7 of the Candidate Brief:
+"Send us the link to one public GitHub repository... ai_chats/ Your full AI chat history for this task, from every AI tool you used... ChatGPT, Claude and Gemini on the web: use the Share button and put the links in ai_chats/links.txt."
+
+## Chat History Links
+- Antigravity / Gemini Chat: [PASTE YOUR SHARE LINK HERE, or see session transcript in ai_chats/]
