@@ -1,13 +1,11 @@
-# Core dependencies for Video Indexing Pipeline
-#
-# NOTE: torch and torchvision are intentionally excluded here.
-#   - On Kaggle:        pre-installed with CUDA support — reinstalling breaks GPU linkage.
-#   - On a local GPU:   install manually with your CUDA version, e.g.:
-#                       pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
-#   - On CPU only:      pip install torch torchvision
-#
-# All other packages below work on any machine via plain pip.
+# ── PyTorch (CUDA 12.1 — works on CUDA 12.1 / 12.2 / 12.3 / 12.4 / RTX 3xxx / 4xxx / A100) ──
+# This index URL is added so pip can find the GPU-enabled wheel automatically.
+# If your machine has an older CUDA (11.8), replace cu121 with cu118 below.
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch>=2.0.0
+torchvision>=0.15.0
 
+# ── Pipeline dependencies (pure-pip, no CUDA index needed) ──────────────────
 ultralytics>=8.3.40
 av>=13.1.0
 opencv-python-headless>=4.10.0.84
