@@ -1,7 +1,19 @@
-# AI Chat History Links
+# AI Chat History Documentation & Links
 
 Per Section 7 of the Candidate Brief:
-"Send us the link to one public GitHub repository... ai_chats/ Your full AI chat history for this task, from every AI tool you used... ChatGPT, Claude and Gemini on the web: use the Share button and put the links in ai_chats/links.txt."
+> "ChatGPT, Claude and Gemini on the web: use the Share button and put the links in ai_chats/links.txt.
+> Claude Code: copy the .jsonl files for this project from ~/.claude/projects/.
+> Cursor, Copilot Chat and other editor tools: use the tool's export option, or copy each chat into a text file.
+> A missing or edited history counts against you. Don't edit or shorten the chats, apart from replacing passwords and API tokens with [REMOVED]."
 
-## Chat History Links
-- Antigravity / Gemini Chat: [PASTE YOUR SHARE LINK HERE, or see session transcript in ai_chats/]
+## Local AI Tool: Google Antigravity (CLI / IDE Agent)
+Antigravity CLI is a local workstation agent (similar to Claude Code and Cursor) and does not host conversations on a public web URL.
+
+In accordance with Section 7 instructions for CLI/editor tools, the full, unedited chat history has been exported directly into this folder:
+1. `ai_chats/antigravity_chat.md` — Human-readable Markdown log of the complete 38-turn conversation.
+2. `ai_chats/antigravity_transcript.jsonl` — Full raw JSONL execution transcript.
+
+All API tokens and secrets have been redacted to `[REMOVED]`.
+
+## Web AI Chats
+https://claude.ai/share/7f56befe-5426-41a8-b9a7-c493453ed1ea
