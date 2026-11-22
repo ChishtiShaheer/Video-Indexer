@@ -1,15 +1,11 @@
-# ── PyTorch (CUDA 12.1 — works on CUDA 12.1 / 12.2 / 12.3 / 12.4 / RTX 3xxx / 4xxx / A100) ──
-# This index URL is added so pip can find the GPU-enabled wheel automatically.
-# If your machine has an older CUDA (11.8), replace cu121 with cu118 below.
+# Core dependencies with exact versions (conforming to Candidate Brief Section 7)
 --extra-index-url https://download.pytorch.org/whl/cu121
-torch>=2.0.0
-torchvision>=0.15.0
-
-# ── Pipeline dependencies (pure-pip, no CUDA index needed) ──────────────────
-ultralytics>=8.3.40
-av>=13.1.0
-opencv-python-headless>=4.10.0.84
-pyarrow>=17.0.0
-huggingface_hub>=0.26.2
-numpy>=1.26.4
-tqdm>=4.67.1
+torch==2.4.1
+torchvision==0.19.1
+ultralytics==8.3.40
+av==13.1.0
+opencv-python-headless==4.10.0.84
+pyarrow==17.0.0
+huggingface_hub==0.26.2
+numpy==1.26.4
+tqdm==4.67.1
